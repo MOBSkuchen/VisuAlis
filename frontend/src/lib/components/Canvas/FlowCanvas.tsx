@@ -1,17 +1,17 @@
 import {
-  ReactFlow,
-  Controls,
-  Background,
-  MiniMap,
-  useReactFlow,
-  type Node,
-  type Edge as FlowEdge,
-  type IsValidConnection,
-  type OnConnect,
-  type NodeChange,
-  type EdgeChange,
-  type NodeMouseHandler,
-  type EdgeMouseHandler,
+    ReactFlow,
+    Controls,
+    Background,
+    MiniMap,
+    useReactFlow,
+    type Node,
+    type Edge as FlowEdge,
+    type IsValidConnection,
+    type OnConnect,
+    type NodeChange,
+    type EdgeChange,
+    type NodeMouseHandler,
+    type EdgeMouseHandler, BackgroundVariant,
 } from "@xyflow/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore, useCurrentAction, useCurrentGraph } from "../../store";
@@ -278,7 +278,12 @@ export function FlowCanvas() {
         proOptions={{ hideAttribution: true }}
       >
         <Controls />
-        <Background />
+          <Background
+              id="2"
+              gap={100}
+              color="#363533"
+              variant={BackgroundVariant.Lines}
+          />
         <MiniMap pannable zoomable />
       </ReactFlow>
       {invalid && <div className="invalid-banner">{invalid}</div>}

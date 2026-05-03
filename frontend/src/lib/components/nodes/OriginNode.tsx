@@ -41,7 +41,7 @@ export default function OriginNode({ data, selected }: NodeProps) {
           position={Position.Bottom}
           id={port}
           className="exec-handle"
-          style={{ bottom: -6, transform: "rotate(180deg)" }}
+          style={{ bottom: -3 }}
         />
       ))}
     </div>

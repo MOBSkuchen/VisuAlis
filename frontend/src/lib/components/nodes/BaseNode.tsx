@@ -37,7 +37,7 @@ export function BaseNode({ kind, selected, label, children }: Props) {
           position={Position.Top}
           id={EXEC_IN_PORT}
           className="exec-handle"
-          style={{ top: -6 }}
+          style={{ top: -3 }}
         />
       )}
 
@@ -81,9 +81,8 @@ export function BaseNode({ kind, selected, label, children }: Props) {
           id={port}
           className="exec-handle"
           style={{
-            bottom: -6,
+            bottom: -3,
             left: `${((i + 1) / (spec.execOuts.length + 1)) * 100}%`,
-            transform: "translateX(-50%) rotate(180deg)",
           }}
           title={EXEC_OUT_LABEL[port] ?? port}
         />

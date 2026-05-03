@@ -18,7 +18,7 @@ const NODE_PALETTE_ITEMS: { kind: NodeKind; label: string }[] = [
   { kind: "redirect", label: "Redirect" },
 ];
 
-type Tab = "pages" | "components" | "nodes";
+type Tab = "pages" | "components" | "nodes" | "actions";
 
 export default function Palette() {
   const [tab, setTab] = useState<Tab>("pages");
@@ -29,17 +29,23 @@ export default function Palette() {
   return (
     <div className="panel">
       <div className="panel-tabs">
-        <div
-          className={`panel-tab ${activeTab === "pages" ? "active" : ""}`}
-          onClick={() => setTab("pages")}
+        {!currentActionId && <div
+            className={`panel-tab ${activeTab === "pages" ? "active" : ""}`}
+            onClick={() => setTab("pages")}
         >
           Pages
-        </div>
-        <div
-          className={`panel-tab ${activeTab === "components" ? "active" : ""}`}
-          onClick={() => setTab("components")}
+        </div>}
+        {!currentActionId && (<div
+            className={`panel-tab ${activeTab === "components" ? "active" : ""}`}
+            onClick={() => setTab("components")}
         >
-          {currentActionId ? "Actions" : "Components"}
+          Components
+        </div>)}
+        <div
+            className={`panel-tab ${activeTab === "actions" ? "active" : ""}`}
+            onClick={() => setTab("actions")}
+        >
+          Actions
         </div>
         {currentActionId && (
           <div
@@ -56,7 +62,7 @@ export default function Palette() {
 
         {activeTab === "components" && !currentActionId && <ComponentPalette />}
 
-        {activeTab === "components" && currentActionId && <ActionList />}
+        {activeTab === "actions" && <ActionList />}
 
         {activeTab === "nodes" && currentActionId && <NodePalette />}
       </div>

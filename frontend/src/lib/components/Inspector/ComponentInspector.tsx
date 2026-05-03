@@ -20,6 +20,7 @@ export function ComponentInspector({ node }: Props) {
 
   function handleTrigger(event: string, actionId: string) {
     if (actionId === "__new__") {
+      // TODO: Add a more pretty way of prompting for user input
       const name = prompt("Action name:", `on${capitalize(event)}`);
       if (!name) return;
       const action = addAction(name);

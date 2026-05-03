@@ -297,7 +297,7 @@ button.danger:hover { border-color: var(--err); color: var(--err); }
   width: 10px !important;
   height: 10px !important;
   border-radius: 2px !important;
-  clip-path: polygon(0 0, 100% 50%, 0 100%) !important;
+  clip-path: polygon(100% 0, 0 0, 50% 100%) !important;
 }
 .data-handle {
   width: 10px !important;

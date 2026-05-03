@@ -18,9 +18,9 @@ export function Inspector() {
     </div>
   );
 
-  if (!currentActionId && page && !selectedComponentId) {
+  if (!currentActionId && page && !selectedComponentId && !action) {
     content = <PageInspector page={page} />;
-  } else if (selectedComponentId && page) {
+  } else if (selectedComponentId && page && !action) {
     const node = findNode(page.root, selectedComponentId);
     if (node) content = <ComponentInspector node={node} />;
   } else if (selectedNodeId && action) {
