@@ -95,6 +95,8 @@ export type ComponentClass =
   | "dropdown"
   | "checkbox"
   | "static_text"
+  | "label"
+  | "buffer"
   | "video"
   | "table"
   | "button";

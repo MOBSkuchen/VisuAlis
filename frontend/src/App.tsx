@@ -14,6 +14,8 @@ import "./lib/components/components/FileUploadC";
 import "./lib/components/components/DropdownC";
 import "./lib/components/components/CheckboxC";
 import "./lib/components/components/StaticTextC";
+import "./lib/components/components/LabelC";
+import "./lib/components/components/BufferC";
 import "./lib/components/components/VideoC";
 import "./lib/components/components/TableC";
 import "./lib/components/components/ButtonC";

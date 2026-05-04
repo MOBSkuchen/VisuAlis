@@ -14,7 +14,7 @@ import type {
   WorkflowType,
 } from "./types";
 import { defaultValue } from "./types";
-import { defaultLayout } from "./registry";
+import { defaultLayout, defaultStaticProps } from "./registry";
 import { api } from "./api";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -133,6 +133,19 @@ function moveChild(
   return insertChild(withoutNode, parentId, node, index);
 }
 
+function cloneNode(node: ComponentNode): ComponentNode {
+  return { ...node, id: newId("c"), children: node.children.map(cloneNode) };
+}
+
+function findParentOf(root: ComponentNode, id: string): ComponentNode | null {
+  for (const child of root.children) {
+    if (child.id === id) return root;
+    const found = findParentOf(child, id);
+    if (found) return found;
+  }
+  return null;
+}
+
 export function findNode(root: ComponentNode, id: string): ComponentNode | null {
   if (root.id === id) return root;
   for (const c of root.children) {
@@ -157,6 +170,7 @@ export interface VisuAlisState {
   selectedComponentId: string | null;
   selectedNodeId: string | null;
   saveStatus: SaveStatus;
+  clipboardNode: ComponentNode | null;
 
   // ── Project ──
   loadProject: (project: Project) => void;
@@ -175,8 +189,12 @@ export interface VisuAlisState {
   moveComponent: (id: string, parentId: string, index: number) => void;
   setStaticProp: (id: string, key: string, value: import("./types").JSONValue) => void;
   setVariableProp: (id: string, key: string, value: import("./types").JSONValue) => void;
+  setLayout: (id: string, layout: import("./types").Layout) => void;
   setTrigger: (id: string, event: string, actionId: string | null) => void;
   setSelectedComponent: (id: string | null) => void;
+  deleteSelected: () => void;
+  copySelected: () => void;
+  pasteComponent: () => void;
 
   // ── Actions ──
   addAction: (name: string) => Action;
@@ -248,6 +266,7 @@ export const useStore = create<VisuAlisState>((set, get) => {
     selectedComponentId: null,
     selectedNodeId: null,
     saveStatus: "idle",
+    clipboardNode: null,
 
     loadProject: (project) => {
       localStorage.setItem(LAST_PROJECT_KEY, project.id);
@@ -286,7 +305,7 @@ export const useStore = create<VisuAlisState>((set, get) => {
       const node: ComponentNode = {
         id: newId("c"),
         cls,
-        staticProps: {},
+        staticProps: defaultStaticProps(cls),
         variableProps: {},
         triggers: {},
         children: [],
@@ -341,6 +360,15 @@ export const useStore = create<VisuAlisState>((set, get) => {
       }));
     },
 
+    setLayout: (id, layout) => {
+      const pageId = get().currentPageId;
+      if (!pageId) return;
+      mutatePage(pageId, (pg) => ({
+        ...pg,
+        root: mapNode(pg.root, id, (n) => ({ ...n, layout })),
+      }));
+    },
+
     setTrigger: (id, event, actionId) => {
       const pageId = get().currentPageId;
       if (!pageId) return;
@@ -354,6 +382,52 @@ export const useStore = create<VisuAlisState>((set, get) => {
     },
 
     setSelectedComponent: (id) => set({ selectedComponentId: id }),
+
+    deleteSelected: () => {
+      const { selectedComponentId, currentPageId, project } = get();
+      if (!selectedComponentId || !currentPageId) return;
+      const page = project.pages.find((p) => p.id === currentPageId);
+      if (!page || page.root.id === selectedComponentId) return; // never delete root
+      mutatePage(currentPageId, (pg) => ({ ...pg, root: removeNode(pg.root, selectedComponentId) }));
+      set({ selectedComponentId: null });
+    },
+
+    copySelected: () => {
+      const { selectedComponentId, currentPageId, project } = get();
+      if (!selectedComponentId || !currentPageId) return;
+      const page = project.pages.find((p) => p.id === currentPageId);
+      if (!page) return;
+      const node = findNode(page.root, selectedComponentId);
+      if (!node || node.id === page.root.id) return;
+      set({ clipboardNode: node });
+    },
+
+    pasteComponent: () => {
+      const { clipboardNode, selectedComponentId, currentPageId, project } = get();
+      if (!clipboardNode || !currentPageId) return;
+      const page = project.pages.find((p) => p.id === currentPageId);
+      if (!page) return;
+      const clone = cloneNode(clipboardNode);
+      // Paste into selected container, or after selected sibling, or at root end.
+      if (selectedComponentId) {
+        const sel = findNode(page.root, selectedComponentId);
+        if (sel && sel.cls === "container") {
+          mutatePage(currentPageId, (pg) => ({ ...pg, root: insertChild(pg.root, sel.id, clone, sel.children.length) }));
+          set({ selectedComponentId: clone.id });
+          return;
+        }
+        const parent = findParentOf(page.root, selectedComponentId);
+        if (parent) {
+          const idx = parent.children.findIndex((c) => c.id === selectedComponentId);
+          mutatePage(currentPageId, (pg) => ({ ...pg, root: insertChild(pg.root, parent.id, clone, idx + 1) }));
+          set({ selectedComponentId: clone.id });
+          return;
+        }
+      }
+      // Fallback: append to root
+      mutatePage(currentPageId, (pg) => ({ ...pg, root: insertChild(pg.root, pg.root.id, clone, pg.root.children.length) }));
+      set({ selectedComponentId: clone.id });
+    },
 
     // ── Actions ────────────────────────────────────────────────────────────
 

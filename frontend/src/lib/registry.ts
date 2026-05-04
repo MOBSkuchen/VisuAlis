@@ -35,7 +35,33 @@ export interface ComponentSpec {
 // ─── Default layout ──────────────────────────────────────────────────────────
 
 export function defaultLayout(): Layout {
-  return { kind: "flex", direction: "column", gap: 8, align: "flex-start", justify: "flex-start" };
+  return { kind: "flex", direction: "column", gap: 8, align: "stretch", justify: "flex-start" };
+}
+
+// Sensible starting size/sizing per component class so newly-dropped components
+// are immediately visible and usable. Returns staticProps that get merged with
+// the per-class defaults from the spec.
+export function defaultStaticProps(cls: ComponentClass): Record<string, JSONValue> {
+  switch (cls) {
+    case "container":
+      return { __width: "fill", __height: 200, padding: 12 };
+    case "button":
+    case "text_input":
+    case "dropdown":
+    case "file_upload":
+      return { __width: 200 };
+    case "table":
+    case "video":
+      return { __width: "fill", __height: 240 };
+    case "label":
+    case "static_text":
+    case "checkbox":
+      return {}; // hug content
+    case "buffer":
+      return {}; // buffer's own grow/size handle this
+    default:
+      return {};
+  }
 }
 
 // ─── Registry ────────────────────────────────────────────────────────────────
@@ -64,6 +90,8 @@ export const COMPONENT_CLASSES: ComponentClass[] = [
   "dropdown",
   "checkbox",
   "static_text",
+  "label",
+  "buffer",
   "video",
   "table",
   "button",

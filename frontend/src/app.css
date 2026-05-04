@@ -418,44 +418,422 @@ button.icon {
   width: 78px;
 }
 
-/* ─── Design canvas ───────────────────────────────────────────────────────── */
+/* ─── Design canvas (Frame + Tree) ───────────────────────────────────────── */
 .design-canvas {
   width: 100%;
   height: 100%;
-  overflow: auto;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 32px;
+  flex-direction: column;
+  overflow: hidden;
 }
-.design-root {
+.design-canvas-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.design-breadcrumb {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--fg-2);
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.design-breadcrumb-seg-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.design-breadcrumb-seg {
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: background 0.12s, color 0.12s;
+}
+.design-breadcrumb-seg:hover { background: var(--bg-2); color: var(--fg); }
+.design-breadcrumb-seg.current { color: var(--accent); background: var(--accent-soft); }
+.design-breadcrumb-sep { color: var(--fg-3); font-size: 10px; }
+
+.design-canvas-stage {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+}
+.design-viewport {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background:
+    linear-gradient(0deg, transparent 24%, rgba(255,255,255,.012) 25%, rgba(255,255,255,.012) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.012) 75%, rgba(255,255,255,.012) 76%, transparent 77%, transparent) 0 0 / 32px 32px,
+    linear-gradient(90deg, transparent 24%, rgba(255,255,255,.012) 25%, rgba(255,255,255,.012) 26%, transparent 27%, transparent 74%, rgba(255,255,255,.012) 75%, rgba(255,255,255,.012) 76%, transparent 77%, transparent) 0 0 / 32px 32px,
+    var(--bg);
+  cursor: default;
+}
+.design-viewport.panning { cursor: grab; }
+.design-viewport.panning:active { cursor: grabbing; }
+
+.design-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #ffffff;
+  color: #111827;
+  border-radius: 4px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 24px 48px rgba(0, 0, 0, 0.55),
+    0 8px 16px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.design-zoom-bar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
   background: var(--bg-1);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  min-width: 480px;
-  min-height: 540px;
-  padding: 12px;
-  box-shadow: var(--shadow-2);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--fg);
+  box-shadow: var(--shadow-1);
+  z-index: 10;
 }
+.design-zoom-value {
+  min-width: 38px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+.design-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--fg-3);
+  background: rgba(20, 20, 28, 0.7);
+  backdrop-filter: blur(4px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ─── Design tree node wrappers ───────────────────────────────────────────── */
 .design-component {
   position: relative;
-  border: 2px solid transparent;
-  border-radius: var(--radius-sm);
-  transition: border-color 0.1s;
+  outline: 1px dashed transparent;
+  outline-offset: 1px;
+  border-radius: 2px;
+  transition: outline-color 0.12s, box-shadow 0.12s;
   cursor: pointer;
+  animation: dc-mount 130ms ease-out;
 }
-.design-component.selected { border-color: var(--accent) !important; }
-.design-component:hover { border-color: var(--border-2); }
-.design-drop-zone {
-  min-height: 32px;
-  border: 2px dashed transparent;
-  border-radius: var(--radius-sm);
-  transition: border-color 0.1s, background 0.1s;
+.design-component:hover { outline-color: rgba(167, 139, 250, 0.45); }
+.design-component.selected {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 1px;
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.18);
+  z-index: 1;
 }
-.design-drop-zone.over {
+.design-component.is-container {
+  outline-color: rgba(124, 58, 237, 0.18);
+  background: rgba(124, 58, 237, 0.025);
+}
+.design-component.is-container:hover { outline-color: rgba(167, 139, 250, 0.55); }
+.design-component.is-container.depth-1 { background: rgba(124, 58, 237, 0.04); }
+.design-component.is-container.depth-2 { background: rgba(124, 58, 237, 0.06); }
+.design-component.is-container.depth-3 { background: rgba(124, 58, 237, 0.08); }
+.design-component.is-container.depth-4 { background: rgba(124, 58, 237, 0.10); }
+
+.design-component.is-buffer {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgba(167, 139, 250, 0.12) 0,
+      rgba(167, 139, 250, 0.12) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+  outline-color: rgba(167, 139, 250, 0.4);
+  border-radius: 3px;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+@keyframes dc-mount {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.dc-render {
+  pointer-events: none;
+}
+.dc-container-body {
+  position: relative;
+}
+.dc-empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: rgba(124, 58, 237, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+  font-weight: 600;
+}
+
+/* Component label tag — top-left corner badge for orientation */
+.design-tag {
+  position: absolute;
+  top: -7px;
+  left: 4px;
+  font-size: 9px;
+  font-weight: 600;
+  background: var(--accent-3);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.12s, transform 0.12s;
+  z-index: 2;
+  white-space: nowrap;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.design-tag code {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 9px;
+  opacity: 0.8;
+  margin-left: 2px;
+}
+.design-component:hover > .design-tag,
+.design-component.selected > .design-tag {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Drop slots — visible while a drag is in progress */
+.design-drop-slot {
+  flex-shrink: 0;
+  border-radius: 3px;
+  transition: background 0.1s, box-shadow 0.1s;
+  position: relative;
+}
+.design-drop-slot.column { width: 100%; height: 6px; }
+.design-drop-slot.row    { height: 100%; width: 6px;  align-self: stretch; }
+.design-drop-slot.fill   { position: absolute; inset: 0; width: auto; height: auto; }
+.design-drop-slot.grow.column { flex: 1; min-height: 32px; }
+.design-drop-slot.grow.row   { flex: 1; min-width: 32px; }
+.design-drop-slot.over {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.35);
+}
+
+/* While a global drag is in progress, hint where things can go */
+body.is-dragging-component .design-drop-slot:not(.fill) {
+  background: rgba(167, 139, 250, 0.10);
+}
+body.is-dragging-component .design-drop-slot.column { height: 10px; }
+body.is-dragging-component .design-drop-slot.column.grow { height: auto; min-height: 40px; }
+body.is-dragging-component .design-drop-slot.row    { width: 10px; }
+body.is-dragging-component .design-drop-slot.row.grow    { width: auto; min-width: 40px; }
+
+/* ─── Selection chrome (handles + size badge) ──────────────────────────── */
+.selection-frame {
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  z-index: 4;
+}
+.selection-frame.resizing { user-select: none; }
+
+.resize-handle {
+  position: absolute;
+  width: calc(10px * var(--handle-scale, 1));
+  height: calc(10px * var(--handle-scale, 1));
+  background: #fff;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+  pointer-events: auto;
+  z-index: 5;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: background 0.1s, transform 0.1s;
+}
+/* Invisible expanded hit area around each handle */
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  inset: calc(-7px * var(--handle-scale, 1));
+}
+.resize-handle:hover { background: var(--accent); transform: scale(1.25); }
+
+/* Offset = half the handle size so it stays centred on the corner/edge */
+.resize-handle.r-nw { top: calc(-5px * var(--handle-scale, 1)); left: calc(-5px * var(--handle-scale, 1)); cursor: nwse-resize; }
+.resize-handle.r-n  { top: calc(-5px * var(--handle-scale, 1)); left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.resize-handle.r-n:hover { transform: translateX(-50%) scale(1.25); }
+.resize-handle.r-ne { top: calc(-5px * var(--handle-scale, 1)); right: calc(-5px * var(--handle-scale, 1)); cursor: nesw-resize; }
+.resize-handle.r-e  { top: 50%; right: calc(-5px * var(--handle-scale, 1)); transform: translateY(-50%); cursor: ew-resize; }
+.resize-handle.r-e:hover { transform: translateY(-50%) scale(1.25); }
+.resize-handle.r-se { bottom: calc(-5px * var(--handle-scale, 1)); right: calc(-5px * var(--handle-scale, 1)); cursor: nwse-resize; }
+.resize-handle.r-s  { bottom: calc(-5px * var(--handle-scale, 1)); left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.resize-handle.r-s:hover { transform: translateX(-50%) scale(1.25); }
+.resize-handle.r-sw { bottom: calc(-5px * var(--handle-scale, 1)); left: calc(-5px * var(--handle-scale, 1)); cursor: nesw-resize; }
+.resize-handle.r-w  { top: 50%; left: calc(-5px * var(--handle-scale, 1)); transform: translateY(-50%); cursor: ew-resize; }
+.resize-handle.r-w:hover { transform: translateY(-50%) scale(1.25); }
+
+.size-badge {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-3);
+  color: #fff;
+  font-size: 10px;
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Inspector polish (terminology refresh) ──────────────────────────── */
+.inspector-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.inspector-cls-pill {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--accent-3), var(--accent-2));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(124, 58, 237, 0.4);
+}
+.inspector-root-badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-3);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.seg-control {
+  display: flex;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2px;
+  gap: 2px;
+}
+.seg-control button {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--fg-2);
+  padding: 5px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 3px;
+}
+.seg-control button:hover {
+  color: var(--fg);
+  background: var(--bg-3);
+  border-color: transparent;
+}
+.seg-control button.active {
+  color: var(--fg);
+  background: var(--bg-1);
   border-color: var(--accent);
-  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent-soft) inset;
 }
+
+.hint-box {
+  font-size: 10.5px;
+  color: var(--fg-2);
+  background: var(--bg-2);
+  border: 1px dashed var(--border);
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.hint-box kbd {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  border-radius: 3px;
+  padding: 0 4px;
+  color: var(--fg);
+}
+
+/* Disabled component overlay */
+.design-component.is-disabled > .dc-render {
+  opacity: 0.42;
+  filter: grayscale(0.3);
+}
+.design-component.is-disabled::after {
+  content: "disabled";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--warn);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 1px 5px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Make handles render reliably even though they sit on a non-positioned host:
+   the .design-component already has `position: relative` via styles below. */
+.design-component { position: relative; }
+
+/* Root container should never look "thin" — fill the design frame. */
+.design-component.is-root {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+.design-component.is-root > .dc-container-body {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
+
 
 /* ─── Flow canvas ─────────────────────────────────────────────────────────── */
 .flow-canvas { width: 100%; height: 100%; }

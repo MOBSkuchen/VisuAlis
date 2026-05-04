@@ -93,7 +93,9 @@ function ComponentPalette() {
           onDragStart={(e) => {
             e.dataTransfer.setData("visualis/component", spec.cls);
             e.dataTransfer.effectAllowed = "copy";
+            document.body.classList.add("is-dragging-component");
           }}
+          onDragEnd={() => document.body.classList.remove("is-dragging-component")}
         >
           <span className="palette-item-icon" />
           {spec.label}

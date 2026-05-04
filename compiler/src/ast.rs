@@ -33,6 +33,8 @@ pub enum ComponentClass {
     Dropdown,
     Checkbox,
     StaticText,
+    Label,
+    Buffer,
     Video,
     Table,
     Button,
