@@ -2,7 +2,7 @@ import { useState } from "react";
 import { allSpecs } from "../registry";
 import { PageList } from "./PageList";
 import { ActionList } from "./ActionList";
-import { NODE_REGISTRY } from "../nodeRegistry";
+import { NODE_REGISTRY, type NodeCategory } from "../nodeRegistry";
 import type { NodeKind } from "../types";
 import { useStore } from "../store";
 
@@ -18,6 +18,15 @@ const NODE_PALETTE_ITEMS: { kind: NodeKind; label: string }[] = [
   { kind: "redirect", label: "Redirect" },
 ];
 
+const CATEGORY_ORDER: NodeCategory[] = ["return", "logic", "pure", "action"];
+const CATEGORY_LABEL: Record<NodeCategory, string> = {
+  trigger: "Trigger",
+  return: "Control",
+  logic: "Logic",
+  pure: "Pure",
+  action: "Action",
+};
+
 type Tab = "pages" | "components" | "nodes" | "actions";
 
 export default function Palette() {
@@ -29,21 +38,25 @@ export default function Palette() {
   return (
     <div className="panel">
       <div className="panel-tabs">
-        {!currentActionId && <div
+        {!currentActionId && (
+          <div
             className={`panel-tab ${activeTab === "pages" ? "active" : ""}`}
             onClick={() => setTab("pages")}
-        >
-          Pages
-        </div>}
-        {!currentActionId && (<div
+          >
+            Pages
+          </div>
+        )}
+        {!currentActionId && (
+          <div
             className={`panel-tab ${activeTab === "components" ? "active" : ""}`}
             onClick={() => setTab("components")}
-        >
-          Components
-        </div>)}
+          >
+            Components
+          </div>
+        )}
         <div
-            className={`panel-tab ${activeTab === "actions" ? "active" : ""}`}
-            onClick={() => setTab("actions")}
+          className={`panel-tab ${activeTab === "actions" ? "active" : ""}`}
+          onClick={() => setTab("actions")}
         >
           Actions
         </div>
@@ -59,11 +72,8 @@ export default function Palette() {
 
       <div className="panel-body">
         {activeTab === "pages" && <PageList />}
-
         {activeTab === "components" && !currentActionId && <ComponentPalette />}
-
         {activeTab === "actions" && <ActionList />}
-
         {activeTab === "nodes" && currentActionId && <NodePalette />}
       </div>
     </div>
@@ -85,6 +95,7 @@ function ComponentPalette() {
             e.dataTransfer.effectAllowed = "copy";
           }}
         >
+          <span className="palette-item-icon" />
           {spec.label}
         </div>
       ))}
@@ -93,26 +104,40 @@ function ComponentPalette() {
 }
 
 function NodePalette() {
+  const grouped: Record<NodeCategory, { kind: NodeKind; label: string }[]> = {
+    trigger: [],
+    return: [],
+    logic: [],
+    pure: [],
+    action: [],
+  };
+  for (const item of NODE_PALETTE_ITEMS) {
+    const cat = NODE_REGISTRY[item.kind].category;
+    grouped[cat].push(item);
+  }
+
   return (
     <div>
-      {NODE_PALETTE_ITEMS.map(({ kind, label }) => {
-        const spec = NODE_REGISTRY[kind];
+      {CATEGORY_ORDER.map((cat) => {
+        const items = grouped[cat];
+        if (items.length === 0) return null;
         return (
-          <div
-            key={kind}
-            className="palette-item"
-            draggable
-            onDragStart={(e) => {
-              e.dataTransfer.setData("visualis/node", kind);
-              e.dataTransfer.effectAllowed = "copy";
-            }}
-          >
-            <span
-              style={{ fontSize: 9, textTransform: "uppercase", color: "var(--fg-2)" }}
-            >
-              {spec.category}
-            </span>
-            {label}
+          <div key={cat}>
+            <div className="panel-section-header">{CATEGORY_LABEL[cat]}</div>
+            {items.map(({ kind, label }) => (
+              <div
+                key={kind}
+                className="palette-item"
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("visualis/node", kind);
+                  e.dataTransfer.effectAllowed = "copy";
+                }}
+              >
+                <span className={`palette-item-icon cat-${cat}`} />
+                {label}
+              </div>
+            ))}
           </div>
         );
       })}

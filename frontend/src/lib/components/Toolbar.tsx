@@ -3,6 +3,7 @@ import { api } from "../api";
 
 export default function Toolbar() {
   const name = useStore((s) => s.project.name);
+  const setProjectName = useStore((s) => s.setProjectName);
   const saveStatus = useStore((s) => s.saveStatus);
   const project = useStore((s) => s.project);
   const currentActionId = useStore((s) => s.currentActionId);
@@ -24,28 +25,37 @@ export default function Toolbar() {
 
   const statusLabel =
     saveStatus === "saving"
-      ? "Saving…"
+      ? "Saving"
       : saveStatus === "error"
         ? "Save failed"
         : saveStatus === "saved"
           ? "Saved"
-          : "";
+          : "Idle";
 
   return (
     <div className="toolbar">
-      <h1>VisuAlis</h1>
-      <span className="muted">—</span>
-      <span style={{ fontSize: 12 }}>{name}</span>
+      <div className="toolbar-brand">
+        <span className="toolbar-brand-dot" />
+        VisuAlis
+      </div>
+      <div className="toolbar-divider" />
+      <input
+        className="toolbar-name"
+        value={name}
+        onChange={(e) => setProjectName(e.target.value)}
+        spellCheck={false}
+        aria-label="Project name"
+      />
 
       {currentActionId && (
-        <button onClick={() => setCurrentAction(null)}>← Back to canvas</button>
+        <button className="ghost" onClick={() => setCurrentAction(null)}>
+          ← Back to canvas
+        </button>
       )}
 
       <div className="toolbar-gap" />
 
-      {statusLabel && (
-        <span className={`save-status ${saveStatus}`}>{statusLabel}</span>
-      )}
+      <span className={`save-status ${saveStatus}`}>{statusLabel}</span>
 
       <button className="primary" onClick={() => void handleCompile()}>
         Compile ↓
