@@ -337,7 +337,7 @@ function SizeInput({ value, onChange }: { value: JSONValue | undefined; onChange
 // ── Generic prop editor ─────────────────────────────────────────────────────
 
 interface PropInputProps {
-  type: "string" | "number" | "boolean" | "string[]";
+  type: "string" | "number" | "boolean" | "string[]" | "options";
   value: JSONValue;
   onChange: (v: JSONValue) => void;
 }
@@ -359,6 +359,13 @@ function PropInput({ type, value, onChange }: PropInputProps) {
         value={String(value ?? "")}
         onChange={(e) => onChange(Number(e.target.value))}
       />
+    );
+  }
+  if (type == "options") {
+    return (
+        <select>
+          {((value ?? "") as string).split(",").map((o) => <option key={o}>{o}</option>)}
+        </select>
     );
   }
   return (

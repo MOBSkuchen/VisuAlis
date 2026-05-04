@@ -21,7 +21,7 @@ registerComponent({
           disabled={Boolean(node.variableProps["disabled"])}
           readOnly
         />
-        {String(node.staticProps["label"] ?? "")}
+        {String(node.staticProps["label"] ?? "Checkbox")}
       </label>
     );
   },

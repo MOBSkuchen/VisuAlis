@@ -6,7 +6,7 @@ registerComponent({
   label: "Text Input",
   staticProps: [
     { name: "placeholder", label: "Placeholder", type: "string", default: "" },
-    { name: "inputType", label: "Type", type: "string", default: "text" },
+    { name: "inputType", label: "Type", type: "options", default: "text,password" },
   ],
   variableProps: [
     { name: "value", label: "Value", type: "string", default: "" },

@@ -6,7 +6,7 @@ import type { ComponentClass, ComponentNode, JSONValue, Layout } from "./types";
 export interface PropSpec {
   name: string;
   label: string;
-  type: "string" | "number" | "boolean" | "string[]";
+  type: "string" | "number" | "boolean" | "string[]" | "options";
   default: JSONValue;
 }
 

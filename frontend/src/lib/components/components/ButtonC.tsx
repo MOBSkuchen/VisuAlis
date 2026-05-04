@@ -5,7 +5,7 @@ registerComponent({
   tag: "button",
   label: "Button",
   staticProps: [
-    { name: "label", label: "Label", type: "string", default: "Click me" },
+    { name: "label", label: "Label", type: "string", default: "Button" },
   ],
   variableProps: [
     { name: "disabled", label: "Disabled", type: "boolean", default: false },
